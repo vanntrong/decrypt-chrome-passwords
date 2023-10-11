@@ -29,9 +29,15 @@ https://ohyicong.medium.com/how-to-hack-chrome-password-with-python-1bedc167be3d
 
 ## How to run
 
+```
 python -m pip install -r requirements.txt
-python .\decrypt_chrome_password.pyw
+```
 
+```
+python .\decrypt_chrome_password.pyw
+```
 ## How to build
 
+```
 python -m PyInstaller --onefile --hidden-import=mysql.connector .\decrypt_chrome_password.pyw
+```
