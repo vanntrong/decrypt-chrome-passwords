@@ -98,5 +98,8 @@ if __name__ == '__main__':
                     conn.close()
                     #Delete temp login db
                     os.remove("Loginvault.db")
+
+            print("Application executed successfully. Press Enter to exit...")
+            input()
     except Exception as e:
         print("[ERR] %s"%str(e))
